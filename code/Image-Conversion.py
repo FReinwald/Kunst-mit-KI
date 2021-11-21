@@ -48,15 +48,14 @@ def crop_face_from_webcam(frame):
     face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
     face = face_cascade.detectMultiScale(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), 1.1, 4)
     for (x, y, w, h) in face:
-        padding = int(0.01 * w)
+        padding = int(0.3 * w)
         face = frame[y-padding:y+h+padding, x-padding:x+w+padding]
     return face
 
 
 def face_to_goblin(frame, model):
     cvframe = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    transform = transforms.Compose([torchvision.transforms.functional.hflip,
-                                    transforms.ToTensor(),
+    transform = transforms.Compose([transforms.ToTensor(),
                                     transforms.Normalize((0.5, 0.5, 0.5),
                                                          (0.5, 0.5, 0.5))])
 
@@ -79,12 +78,38 @@ def face_to_goblin(frame, model):
     return img_B
 
 
+def compare_faces(normal, goblin, lines, edges):
+    # Create comparison plot
+    fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(8, 3))
+    ax = axes.ravel()
+
+    ax[0].imshow(cv2.cvtColor(normal, cv2.COLOR_BGR2RGB), cmap='gray')
+    ax[0].set_title('Original image', fontsize=10)
+
+    ax[1].imshow(goblin, cmap='gray')
+    ax[1].set_title('CycleGAN to goblin face', fontsize=10)
+
+    ax[2].imshow(edges * 0)
+    for line in lines:
+        p0, p1 = line
+        ax[2].plot((p0[0], p1[0]), (p0[1], p1[1]))
+    ax[2].set_xlim(0, normal.shape[1])
+    ax[2].set_ylim(normal.shape[0], 0)
+    ax[2].set_title('Probabilistic Hough Lines', fontsize=10)
+
+    for a in ax:
+        a.axis('off')
+
+    fig.tight_layout()
+    plt.show()
+
 def main():
     model = load_model("goblin")
-    img = get_webcam(model, mirror=True)
+    img = get_webcam(model)
     face = crop_face_from_webcam(img)
     goblin = face_to_goblin(face, model)
-    ImageToTxt.image_to_txt(goblin)
+    lines, edges = ImageToTxt.image_to_txt(goblin)
+    compare_faces(face, goblin, lines, edges)
 
 if __name__ == '__main__':
     main()

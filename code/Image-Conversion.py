@@ -48,7 +48,7 @@ def crop_face_from_webcam(frame):
     face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
     face = face_cascade.detectMultiScale(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), 1.1, 4)
     for (x, y, w, h) in face:
-        padding = int(0.3 * w)
+        padding = int(0.2 * w)
         face = frame[y-padding:y+h+padding, x-padding:x+w+padding]
     return face
 

@@ -1,7 +1,5 @@
-import numpy
 import numpy as np
 import cv2
-from matplotlib import pyplot as plt
 from skimage import feature
 from skimage.transform import probabilistic_hough_line
 
@@ -11,25 +9,31 @@ def image_to_txt(img):
     # path_to_file_folder = './images/input/'
     # txt_file_name = 'testimg01.jpg'
     # path_to_file = path_to_file_folder+txt_file_name
-    drawing_plane_z_level = 0
-    drawing_lift = 145
+    drawing_plane_z_level = 108
+    drawing_lift = 135
+    x_zero_offset = 145
+    x_max_drawing_value = 235
+    y_zero_offset = 180
+    y_max_drawing_value = 270
+    endpoint = [215, 200, 118]
     max_drawing_value = 145
 
     # Read image
     # img = cv2.imread(path_to_file, cv2.IMREAD_GRAYSCALE)
     # todo: image preprocessing: resolution, contrast
-    # todo: enlarge crop but with face in center
-    # todo: find dynamic parameters for canny
-    img = numpy.array(img)
+    img = np.array(img)
     img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-    edges = feature.canny(img, sigma=2)
+    edges = feature.canny(img, sigma=2.25)
     # based on: https://scikit-image.org/docs/dev/auto_examples/edges/plot_line_hough_transform.html#sphx-glr-auto-examples-edges-plot-line-hough-transform-py
     lines = probabilistic_hough_line(edges, line_length=1, line_gap=1)
-
-
-
-    # iterate trough 2xN array if (2,N) = (1,N+1) don't lift pen otherwise add 2 points to lift pen
     data_2_d = np.array(lines)
+    # scale data to robot drawing area
+    x_max, y_max = data_2_d.max(axis=0)
+    for row in data_2_d:
+        row[0] = row[0]*(x_max/(x_max_drawing_value-x_zero_offset))+x_zero_offset
+        row[1] = row[1] * (y_max / (y_max_drawing_value - y_zero_offset)) + y_zero_offset
+
+    # iterate trough 2xN array if (2,N) = (1,N+1) don't lift pen. Otherwise add 2 points to lift pen
     data_2_d = np.insert(data_2_d, 2, drawing_plane_z_level, axis=2)
     temp = np.array([[0, 0], [0, 0]])
     move_data_complete = np.array([0, 0, drawing_lift])
@@ -44,9 +48,13 @@ def image_to_txt(img):
         temp = x
         move_data_complete = np.vstack((move_data_complete, move_data))
 
+    # Add Endpoint
+    move_data_complete = np.vstack((move_data_complete, endpoint))
+
+    # One Row for each value
     move_data_complete = move_data_complete.flatten()
-    # Normalize move data
-    move_data_complete = move_data_complete/max(move_data_complete)*max_drawing_value
+
+    # Write txt
     f = open("robotmove.txt", "w")
     np.savetxt(f, move_data_complete, '%d')
     f.close()

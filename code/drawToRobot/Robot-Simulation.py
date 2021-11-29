@@ -5,13 +5,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 #Robot specific drawing area
-xmax = 170
-ymax = 145
-zmax = 30
-drawing_plane = 10
+xmax = 235
+ymax = 270
+zmax = 150
+drawing_plane = 108
 
 #set path to file
-path_to_file_folder = 'C:/Users/Fabian/OneDrive - stud.hs-heilbronn.de/HHN/WS2122/Semesterarbeit/repo Ki kunst/'
+path_to_file_folder = 'C:/Users/Fabian/OneDrive - stud.hs-heilbronn.de/HHN/WS2122/Semesterarbeit/face-to-cartoon/code/'
 txt_file_name = 'robotmove.txt'
 path_to_file = path_to_file_folder+txt_file_name
 
@@ -40,8 +40,8 @@ c = [0, 0, 0]
 
 #drawing of plot
 ax = plt.figure().add_subplot(projection='3d')
-ax.set(xlim=(0, xmax), ylim=(0, ymax), zlim=(0, zmax))
-ax.quiver(x, y, z, x_dir, y_dir, z_dir, colors=c, normalize=True, arrow_length_ratio=0.05)
+ax.set(xlim=(145, xmax), ylim=(180, ymax), zlim=(120, zmax))
+ax.quiver(x, y, z, x_dir, y_dir, z_dir, colors=c, normalize=False, arrow_length_ratio=0.05)
 # Disable
 # ax.quiver(x, y, z, x_dir, y_dir, z_dir, colors=c, normalize=False, arrow_length_ratio=0.05)
 plt.show()

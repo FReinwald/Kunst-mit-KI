@@ -68,9 +68,6 @@ def face_to_goblin(frame, model):
     img_B = helper.to_image(img_B)
     img_AB = helper.concatenate([img_A, img_B])
 
-    # img_B_out = Image.new('RGB', [256, 256])
-    # img_B_out.paste(img_B)
-    # cv2.imshow(img_B_out)
     plt.axis('off')
     plt.title('Generated goblin face')
     plt.imshow(img_AB)

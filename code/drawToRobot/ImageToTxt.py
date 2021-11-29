@@ -6,8 +6,8 @@ from skimage.transform import probabilistic_hough_line
 
 def image_to_txt(img):
     # Constants
-    # path_to_file_folder = './images/input/'
-    # txt_file_name = 'testimg01.jpg'
+    # path_to_file_folder = './images/'
+    # txt_file_name = 'testimg01.png'
     # path_to_file = path_to_file_folder+txt_file_name
     drawing_plane_z_level = 108
     drawing_lift = 135
@@ -20,23 +20,17 @@ def image_to_txt(img):
 
     # Read image
     # img = cv2.imread(path_to_file, cv2.IMREAD_GRAYSCALE)
-    # todo: image preprocessing: resolution, contrast
     img = np.array(img)
     img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-    edges = feature.canny(img, sigma=2.25)
+    edges = feature.canny(img, sigma=2.75)
     # based on: https://scikit-image.org/docs/dev/auto_examples/edges/plot_line_hough_transform.html#sphx-glr-auto-examples-edges-plot-line-hough-transform-py
     lines = probabilistic_hough_line(edges, line_length=1, line_gap=1)
     data_2_d = np.array(lines)
-    # scale data to robot drawing area
-    x_max, y_max = data_2_d.max(axis=0)
-    for row in data_2_d:
-        row[0] = row[0]*(x_max/(x_max_drawing_value-x_zero_offset))+x_zero_offset
-        row[1] = row[1] * (y_max / (y_max_drawing_value - y_zero_offset)) + y_zero_offset
 
     # iterate trough 2xN array if (2,N) = (1,N+1) don't lift pen. Otherwise add 2 points to lift pen
     data_2_d = np.insert(data_2_d, 2, drawing_plane_z_level, axis=2)
-    temp = np.array([[0, 0], [0, 0]])
-    move_data_complete = np.array([0, 0, drawing_lift])
+    temp = np.array([[0, 0], [215, 200]])
+    move_data_complete = np.array([215, 200, drawing_lift])
     # Detect if lines start onto each other
     for x in data_2_d:
         if (x[1, 0] == temp[0, 0]) and (x[1, 1] == temp[0, 1]):
@@ -47,6 +41,12 @@ def image_to_txt(img):
             move_data = np.vstack((up, strafe, x))
         temp = x
         move_data_complete = np.vstack((move_data_complete, move_data))
+
+    # Rescale x and y
+    move_data_complete[:, 0] = move_data_complete[:, 0] * (x_max_drawing_value - x_zero_offset) / max(
+        move_data_complete[:, 0]) + x_zero_offset
+    move_data_complete[:, 1] = move_data_complete[:, 1] * (y_max_drawing_value - y_zero_offset) / max(
+        move_data_complete[:, 1]) + y_zero_offset
 
     # Add Endpoint
     move_data_complete = np.vstack((move_data_complete, endpoint))

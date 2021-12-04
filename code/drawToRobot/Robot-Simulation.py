@@ -12,7 +12,7 @@ drawing_plane = 108
 
 #set path to file
 path_to_file_folder = 'C:/Users/Fabian/OneDrive - stud.hs-heilbronn.de/HHN/WS2122/Semesterarbeit/face-to-cartoon/code/'
-txt_file_name = 'robotmove.txt'
+txt_file_name = 'robotmove_oneline.txt'
 path_to_file = path_to_file_folder+txt_file_name
 
 #read txt file with path coordinates
@@ -40,7 +40,7 @@ c = [0, 0, 0]
 
 #drawing of plot
 ax = plt.figure().add_subplot(projection='3d')
-ax.set(xlim=(145, xmax), ylim=(180, ymax), zlim=(120, zmax))
+ax.set(xlim=(145, xmax), ylim=(180, ymax), zlim=(100, zmax))
 ax.quiver(x, y, z, x_dir, y_dir, z_dir, colors=c, normalize=False, arrow_length_ratio=0.05)
 # Disable
 # ax.quiver(x, y, z, x_dir, y_dir, z_dir, colors=c, normalize=False, arrow_length_ratio=0.05)

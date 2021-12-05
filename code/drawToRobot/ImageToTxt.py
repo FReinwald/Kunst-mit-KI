@@ -24,7 +24,7 @@ def image_to_txt(img):
     img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
     edges = feature.canny(img, sigma=2.75)
     # based on: https://scikit-image.org/docs/dev/auto_examples/edges/plot_line_hough_transform.html#sphx-glr-auto-examples-edges-plot-line-hough-transform-py
-    lines = probabilistic_hough_line(edges, line_length=10, line_gap=1)
+    lines = probabilistic_hough_line(edges, line_length=2, line_gap=3)
     data_2_d = np.array(lines)
 
     # create oneline drawing
@@ -67,18 +67,27 @@ def image_to_txt(img):
 
 def combine_lines(data_2_d):
     start_point = np.array([0, 0])
-    data_out = np.array([100, 100])
+    data_out = np.array([[100, 100, drawing_lift], [100, 100, drawing_lift]])
     # reshape array to be 2-dim
     data_2_d = np.reshape(data_2_d, (-1, 2))
+    # add z-Data
+    data_2_d = np.insert(data_2_d, 2, drawing_plane_z_level, axis=1)
+
     rows, columns = data_2_d.shape
     # iterate trough array to form new online
     for i in range(0, rows, 2):
-        idx = find_closest_point(start_point, data_2_d)
+        idx, dist = find_closest_point(start_point, data_2_d)
         # find second point belonging to hough line
         if idx % 2 == 0:
             idx2 = idx+1
         else:
             idx2 = idx-1
+        # Lift pen if distance is too long
+        if dist > 60:
+            lift1 = np.array([data_out[-1, 0], data_out[-1, 1], drawing_lift])
+            data_out = np.vstack((data_out, lift1))
+            lift2 = np.array([data_2_d[idx, 0], data_2_d[idx, 1], drawing_lift])
+            data_out = np.vstack((data_out, lift2))
         # add this line to output data
         data_out = np.vstack((data_out, data_2_d[idx, :]))
         data_out = np.vstack((data_out, data_2_d[idx2, :]))
@@ -93,7 +102,6 @@ def combine_lines(data_2_d):
 #    rows, columns = data_out.shape
 #    data_out = np.delete(data_out, range(int(rows-1*0.4), int(rows-1)), 0)
 
-    data_out = np.insert(data_out, 2, drawing_plane_z_level, axis=1)
     # Rescale x and y
     data_out[:, 0] = data_out[:, 0] * (x_max_drawing_value - x_zero_offset) / max(
         data_out[:, 0]) + x_zero_offset
@@ -112,7 +120,8 @@ def find_closest_point(start_point, data_2_d):
     x = data_2_d[:, 0]
     y = data_2_d[:, 1]
     # calculate distance to startpoint
-    distance = np.sqrt(np.square(x-start_point[0]+np.square(y-start_point[1])))
+    distance = np.sqrt(np.square(x-start_point[0])+np.square(y-start_point[1]))
     # find index for closest point
     idx = np.argmin(distance)
-    return idx
+    min_distance = distance[idx]
+    return idx, min_distance

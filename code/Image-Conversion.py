@@ -1,23 +1,13 @@
 import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
-import time
-
-import numpy as np
 import cv2
-from PIL import Image
-
-import os
-
-from options.test_options import TestOptions
-from options.train_options import TrainOptions
-from data import create_dataset
-from models import create_model
-from util import html
-import torch
-import torchvision
+from PIL import Image, ImageTk
+from tkinter import Tk, Label, Button
 import torchvision.transforms as transforms
-from drawToRobot import ImageToTxt
+import numpy as np
+import pyperclip as pc
 
+from models import create_model
+from drawToRobot import ImageToTxt
 from helper_demo import helper
 
 
@@ -31,16 +21,9 @@ def load_model(model_name):
     return model
 
 
-def get_webcam(model, mirror=False):
+def get_webcam():
     cam = cv2.VideoCapture(0)
-    while True:
-        ret_val, img = cam.read()
-        if mirror:
-            img = cv2.flip(img, 1)
-        cv2.imshow('my webcam', img)
-        if cv2.waitKey(1) == 27:
-            break  # esc to quit
-    cv2.destroyAllWindows()
+    img = build_ui(cam)
     return img
 
 
@@ -66,21 +49,25 @@ def face_to_goblin(frame, model):
     img_A = helper.to_image(img)
     img_B = model.gen_B(img, 1)
     img_B = helper.to_image(img_B)
-    img_AB = helper.concatenate([img_A, img_B])
-
-    plt.axis('off')
-    plt.title('Generated goblin face')
-    plt.imshow(img_AB)
-    plt.show()
+    # img_AB = helper.concatenate([img_A, img_B])
+    #
+    # plt.axis('off')
+    # plt.title('Generated goblin face')
+    # plt.imshow(img_AB)
+    # plt.show()
     return img_B
 
 
-def compare_faces(normal, goblin, lines, edges):
+def compare_faces(face, goblin, lines, edges, data_out, data_robot_format):
+    # Copy data_out to clipboard to be entered in robot controlling software
+    out_txt = '\n'.join([f"{line}" for line in data_robot_format])
+    pc.copy(out_txt)
     # Create comparison plot
-    fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(8, 3))
+    fig, axes = plt.subplots(nrows=1, ncols=4, figsize=(8, 4))
+    fig.suptitle('Image conversion process - data for robot controller was copied to clipboard')
     ax = axes.ravel()
 
-    ax[0].imshow(cv2.cvtColor(normal, cv2.COLOR_BGR2RGB), cmap='gray')
+    ax[0].imshow(cv2.cvtColor(face, cv2.COLOR_BGR2RGB), cmap='gray')
     ax[0].set_title('Original image', fontsize=10)
 
     ax[1].imshow(goblin, cmap='gray')
@@ -90,9 +77,30 @@ def compare_faces(normal, goblin, lines, edges):
     for line in lines:
         p0, p1 = line
         ax[2].plot((p0[0], p1[0]), (p0[1], p1[1]))
-    ax[2].set_xlim(0, normal.shape[1])
-    ax[2].set_ylim(normal.shape[0], 0)
+    ax[2].set_xlim(0, 256)
+    ax[2].set_ylim(256, 0)
     ax[2].set_title('Probabilistic Hough Lines', fontsize=10)
+
+    def calculate_direction(points):
+        vdir = points[1:]
+        vdir = np.append(vdir, 0) - points
+        vdir[-1] = 0
+        return vdir
+
+    x_zero_offset = 145
+    xmax = 235
+    y_zero_offset = 180
+    ymax = 270
+
+    x = data_out[:, 0]
+    y = data_out[:, 1]
+    xd = calculate_direction(x)
+    yd = calculate_direction(y)
+
+    ax[3].imshow(edges * 0, alpha=0)
+    ax[3].quiver(x, y, xd, yd, angles='xy', scale_units='xy', scale=1)
+    ax[3].set(xlim=(x_zero_offset, xmax), ylim=(ymax, y_zero_offset))
+    ax[3].set_title('Oneline drawing from Robot', fontsize=10)
 
     for a in ax:
         a.axis('off')
@@ -100,13 +108,44 @@ def compare_faces(normal, goblin, lines, edges):
     fig.tight_layout()
     plt.show()
 
+
+def build_ui(cam):
+    win = Tk()
+    win.geometry('1024x720')
+    win.title('Webcam')
+    label = Label(win)
+    label.grid(row=0, column=0)
+
+    def close():
+        win.destroy()
+
+    capture_button = Button(win, text='   Capture Image   ', command=close)
+    capture_button.grid(row=1, column=0)
+
+    def show_frames():
+        cv2img = cv2.cvtColor(cam.read()[1], cv2.COLOR_BGR2RGB)
+        cv2img = cv2.flip(cv2img, 1)
+        img = Image.fromarray(cv2img)
+        imgtk = ImageTk.PhotoImage(image=img)
+        label.imgtk = imgtk
+        label.configure(image=imgtk)
+        label.after(10, show_frames)
+        return cv2img
+
+    cv2img = show_frames()
+    cv2img = cv2.cvtColor(cv2img, cv2.COLOR_BGR2RGB)
+    win.mainloop()
+    return cv2img
+
+
 def main():
     model = load_model("goblin")
-    img = get_webcam(model)
+    img = get_webcam()
     face = crop_face_from_webcam(img)
     goblin = face_to_goblin(face, model)
-    lines, edges = ImageToTxt.image_to_txt(goblin)
-    compare_faces(face, goblin, lines, edges)
+    lines, edges, data_out, data_robot_format = ImageToTxt.image_to_txt(goblin)
+    compare_faces(face, goblin, lines, edges, data_out, data_robot_format)
+
 
 if __name__ == '__main__':
     main()

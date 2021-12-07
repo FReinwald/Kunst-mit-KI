@@ -23,7 +23,16 @@ def load_model(model_name):
 
 def get_webcam():
     cam = cv2.VideoCapture(0)
-    img = build_ui(cam)
+    while True:
+        _, img = cam.read()
+        # flip image for mirroring
+        img = cv2.flip(img, 1)
+        cv2.imshow('Press space to take a picture', img)
+        # take picture by pressing space or escape
+        if cv2.waitKey(1) == 32:
+            break
+    cv2.destroyAllWindows()
+    # img = build_ui(cam)
     return img
 
 
@@ -116,12 +125,6 @@ def build_ui(cam):
     label = Label(win)
     label.grid(row=0, column=0)
 
-    def close():
-        win.destroy()
-
-    capture_button = Button(win, text='   Capture Image   ', command=close)
-    capture_button.grid(row=1, column=0)
-
     def show_frames():
         cv2img = cv2.cvtColor(cam.read()[1], cv2.COLOR_BGR2RGB)
         cv2img = cv2.flip(cv2img, 1)
@@ -129,13 +132,20 @@ def build_ui(cam):
         imgtk = ImageTk.PhotoImage(image=img)
         label.imgtk = imgtk
         label.configure(image=imgtk)
-        label.after(10, show_frames)
+        label.after(1, show_frames)
         return cv2img
 
-    cv2img = show_frames()
-    cv2img = cv2.cvtColor(cv2img, cv2.COLOR_BGR2RGB)
+    outimg = show_frames()
+    outimg = cv2.cvtColor(outimg, cv2.COLOR_BGR2RGB)
+
+    def close():
+        win.destroy()
+
+    capture_button = Button(win, text='   Capture Image   ', command=close)
+    capture_button.grid(row=1, column=0)
+
     win.mainloop()
-    return cv2img
+    return outimg
 
 
 def main():

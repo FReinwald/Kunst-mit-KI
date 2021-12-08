@@ -1,7 +1,10 @@
+# Given an image, edges are detected via canny and hough - online drawing created out to them and written to txt-file
+# Code by Fabian Reinwald
 import numpy as np
 import cv2
 from skimage import feature
 from skimage.transform import probabilistic_hough_line
+# Parameters of robot
 drawing_plane_z_level = 108
 drawing_lift = 135
 x_zero_offset = 145
@@ -10,7 +13,7 @@ y_zero_offset = 180
 y_max_drawing_value = 270
 endpoint = [215, 200, 118]
 max_drawing_value = 145
-# control how often the robot lifts the arm while drawing
+# control at what distance of vectors the robot lifts the arm while drawing -> set to high number to never lift
 max_distance = 1000
 
 
@@ -79,6 +82,16 @@ def combine_lines(data_2_d, imgshape):
     f = open("robotmove_oneline.txt", "w")
     np.savetxt(f, data_out_flat, "%d")
     f.close()
+    # Alternative txt format (x1 y1 x2 y2) - no z data - each vector in one row
+    # delete 3rd column with z data
+    data_out_alt = np.delete(data_out, 2, 1)
+    data_out_alt = np.delete(data_out_alt, [0, 1], 0)
+    data_out_alt = np.delete(data_out_alt, -1, 0)
+    data_out_alt = np.reshape(data_out_alt, (-1, 4))
+    print(data_out_alt)
+    t = open("robotmove_alt.txt", "w")
+    np.savetxt(t, data_out_alt, "%d")
+    t.close()
     return data_out, data_out_flat
 
 

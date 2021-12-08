@@ -1,3 +1,5 @@
+# This file handles the whole process converting an image from a webcam to an AI picture and a drawing file to the robot
+# Code by Fabian Reinwald
 import matplotlib.pyplot as plt
 import cv2
 from PIL import Image, ImageTk
@@ -37,15 +39,18 @@ def get_webcam():
 
 
 def crop_face_from_webcam(frame):
+    # Find face with haarcascade
     face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
     face = face_cascade.detectMultiScale(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), 1.1, 4)
     for (x, y, w, h) in face:
+        # increase border around face
         padding = int(0.2 * w)
         face = frame[y-padding:y+h+padding, x-padding:x+w+padding]
     return face
 
 
 def face_to_goblin(frame, model):
+    # image format changes
     cvframe = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     transform = transforms.Compose([transforms.ToTensor(),
                                     transforms.Normalize((0.5, 0.5, 0.5),
@@ -55,16 +60,11 @@ def face_to_goblin(frame, model):
     pil_img = pil_img.resize([256, 256])
     img = transform(pil_img)
     img = img.view(1, 3, 256, 256)
-    img_A = helper.to_image(img)
-    img_B = model.gen_B(img, 1)
-    img_B = helper.to_image(img_B)
-    # img_AB = helper.concatenate([img_A, img_B])
-    #
-    # plt.axis('off')
-    # plt.title('Generated goblin face')
-    # plt.imshow(img_AB)
-    # plt.show()
-    return img_B
+    # applying model to image
+    img_a = model.gen_B(img, 1)
+    img_a = helper.to_image(img_a)
+
+    return img_a
 
 
 def compare_faces(face, goblin, lines, edges, data_out, data_robot_format):
@@ -76,12 +76,15 @@ def compare_faces(face, goblin, lines, edges, data_out, data_robot_format):
     fig.suptitle('Image conversion process - data for robot controller was copied to clipboard')
     ax = axes.ravel()
 
+    # Original image
     ax[0].imshow(cv2.cvtColor(face, cv2.COLOR_BGR2RGB), cmap='gray')
     ax[0].set_title('Original image', fontsize=10)
 
+    # AI image
     ax[1].imshow(goblin, cmap='gray')
     ax[1].set_title('CycleGAN to goblin face', fontsize=10)
 
+    # Edge detection
     ax[2].imshow(edges * 0)
     for line in lines:
         p0, p1 = line
@@ -90,12 +93,14 @@ def compare_faces(face, goblin, lines, edges, data_out, data_robot_format):
     ax[2].set_ylim(256, 0)
     ax[2].set_title('Probabilistic Hough Lines', fontsize=10)
 
+    # Given multiple points, calculate to direction of the vector connection them for quiver plotting
     def calculate_direction(points):
         vdir = points[1:]
         vdir = np.append(vdir, 0) - points
         vdir[-1] = 0
         return vdir
 
+    # Parameters of robot
     x_zero_offset = 145
     xmax = 235
     y_zero_offset = 180
@@ -106,6 +111,7 @@ def compare_faces(face, goblin, lines, edges, data_out, data_robot_format):
     xd = calculate_direction(x)
     yd = calculate_direction(y)
 
+    # Oneline drawing
     ax[3].imshow(edges * 0, alpha=0)
     ax[3].quiver(x, y, xd, yd, angles='xy', scale_units='xy', scale=1)
     ax[3].set(xlim=(x_zero_offset, xmax), ylim=(ymax, y_zero_offset))
@@ -118,34 +124,34 @@ def compare_faces(face, goblin, lines, edges, data_out, data_robot_format):
     plt.show()
 
 
-def build_ui(cam):
-    win = Tk()
-    win.geometry('1024x720')
-    win.title('Webcam')
-    label = Label(win)
-    label.grid(row=0, column=0)
-
-    def show_frames():
-        cv2img = cv2.cvtColor(cam.read()[1], cv2.COLOR_BGR2RGB)
-        cv2img = cv2.flip(cv2img, 1)
-        img = Image.fromarray(cv2img)
-        imgtk = ImageTk.PhotoImage(image=img)
-        label.imgtk = imgtk
-        label.configure(image=imgtk)
-        label.after(1, show_frames)
-        return cv2img
-
-    outimg = show_frames()
-    outimg = cv2.cvtColor(outimg, cv2.COLOR_BGR2RGB)
-
-    def close():
-        win.destroy()
-
-    capture_button = Button(win, text='   Capture Image   ', command=close)
-    capture_button.grid(row=1, column=0)
-
-    win.mainloop()
-    return outimg
+# def build_ui(cam):
+#     win = Tk()
+#     win.geometry('1024x720')
+#     win.title('Webcam')
+#     label = Label(win)
+#     label.grid(row=0, column=0)
+#
+#     def show_frames():
+#         cv2img = cv2.cvtColor(cam.read()[1], cv2.COLOR_BGR2RGB)
+#         cv2img = cv2.flip(cv2img, 1)
+#         img = Image.fromarray(cv2img)
+#         imgtk = ImageTk.PhotoImage(image=img)
+#         label.imgtk = imgtk
+#         label.configure(image=imgtk)
+#         label.after(1, show_frames)
+#         return cv2img
+#
+#     outimg = show_frames()
+#     outimg = cv2.cvtColor(outimg, cv2.COLOR_BGR2RGB)
+#
+#     def close():
+#         win.destroy()
+#
+#     capture_button = Button(win, text='   Capture Image   ', command=close)
+#     capture_button.grid(row=1, column=0)
+#
+#     win.mainloop()
+#     return outimg
 
 
 def main():

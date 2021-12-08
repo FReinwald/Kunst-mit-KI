@@ -1,3 +1,5 @@
+# Renames and rescales images to be used as training data for train.py
+# Code by Fabian Reinwald
 import cv2
 import glob
 import os
@@ -22,4 +24,4 @@ for img in glob.glob(inputFolder + "/*.jpg"):
         ii += 1
         i = 1
 
-# Path for image training: ./datasets/faces/cartoon_conditional
+# Drag images to Path for image training: ./datasets/faces/cartoon_conditional

@@ -1,5 +1,6 @@
 # Robot-Simulation
 # This file converts a txt file of coordinates to a visual representation of the robot movement
+# Code by Fabian Reinwald
 
 import numpy as np
 import matplotlib.pyplot as plt

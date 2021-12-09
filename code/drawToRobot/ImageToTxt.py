@@ -79,18 +79,18 @@ def combine_lines(data_2_d, imgshape):
     data_out = np.vstack((data_out, endpoint))
     data_out_flat = data_out.flatten()
     # Write to txt
-    f = open("robotmove_oneline.txt", "w")
+    f = open("robotmove_oneline_xyz.txt", "w")
     np.savetxt(f, data_out_flat, "%d")
     f.close()
     # Alternative txt format (x1 y1 x2 y2) - no z data - each vector in one row
     # delete 3rd column with z data
-    data_out_alt = np.delete(data_out, 2, 1)
-    data_out_alt = np.delete(data_out_alt, [0, 1], 0)
-    data_out_alt = np.delete(data_out_alt, -1, 0)
-    data_out_alt = np.reshape(data_out_alt, (-1, 4))
-    print(data_out_alt)
-    t = open("robotmove_alt.txt", "w")
-    np.savetxt(t, data_out_alt, "%d")
+    data_out_x1y1x2y2 = np.delete(data_out, 2, 1)
+    data_out_x1y1x2y2 = np.delete(data_out_x1y1x2y2, [0, 1], 0)
+    data_out_x1y1x2y2 = np.delete(data_out_x1y1x2y2, -1, 0)
+    data_out_x1y1x2y2 = np.reshape(data_out_x1y1x2y2, (-1, 4))
+    print(data_out_x1y1x2y2)
+    t = open("robotmove_x1y1x2y2.txt", "w")
+    np.savetxt(t, data_out_x1y1x2y2, "%d")
     t.close()
     return data_out, data_out_flat
 

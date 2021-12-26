@@ -156,7 +156,11 @@ class CycleGANModel(BaseModel):
         self.image_paths = input['A_paths']
 
         ### Get the class label of the cartoon image, and transform it into one-hot
-        self.real_B_cls_label = int(input['B_paths'][0].split('/')[-1].split('_')[0])
+        # self.real_B_cls_label = int(input['B_paths'][0].split('/')[-1].split('_')[0])
+        # --- Fabian Reinwald ---
+        self.real_B_cls_label = int(input['B_paths'][0].split('/')[-1].split('_')[0])               # for Linux
+        # self.real_B_cls_label = int(input['B_paths'][0].split('\\')[-1].split('_')[0])            # for windows
+        # --- End Fabian Reinwald ---
         self.cls_input = np.zeros((1,10,1,1))
         self.cls_input[0,self.real_B_cls_label - 1,0,0] = 1
         self.cls_input = torch.from_numpy(self.cls_input).float()

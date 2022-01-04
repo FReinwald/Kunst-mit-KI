@@ -1,3 +1,12 @@
+# This is a fork of [face-to-cartoon](https://github.com/fs2019-atml/face-to-cartoon).
+The projekt was modified with a new model for generation of goblin faces. The generated images are also converted to be drawn by a robot.
+Significant changes are either marked in the code with my name or added via new files.
+
+## Running the program
+run [Image-Conversion.py](/code/Image-Conversion.py)
+
+For changes to the original CycleGAN see below:
+
 # Code notes
 Our contributions are declared using the following comment:
 `#### GROUP5 code ####` and `#### END of code ####`. Finding them using grep: `grep -rnw . -e 'GROUP5'`.

@@ -124,36 +124,6 @@ def compare_faces(face, goblin, lines, edges, data_out, data_robot_format):
     plt.show()
 
 
-# def build_ui(cam):
-#     win = Tk()
-#     win.geometry('1024x720')
-#     win.title('Webcam')
-#     label = Label(win)
-#     label.grid(row=0, column=0)
-#
-#     def show_frames():
-#         cv2img = cv2.cvtColor(cam.read()[1], cv2.COLOR_BGR2RGB)
-#         cv2img = cv2.flip(cv2img, 1)
-#         img = Image.fromarray(cv2img)
-#         imgtk = ImageTk.PhotoImage(image=img)
-#         label.imgtk = imgtk
-#         label.configure(image=imgtk)
-#         label.after(1, show_frames)
-#         return cv2img
-#
-#     outimg = show_frames()
-#     outimg = cv2.cvtColor(outimg, cv2.COLOR_BGR2RGB)
-#
-#     def close():
-#         win.destroy()
-#
-#     capture_button = Button(win, text='   Capture Image   ', command=close)
-#     capture_button.grid(row=1, column=0)
-#
-#     win.mainloop()
-#     return outimg
-
-
 def main():
     model = load_model("goblin")
     img = get_webcam()

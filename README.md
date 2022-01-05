@@ -1,28 +1,24 @@
-# Conditional cartoon faces incorporating a landmark loss in CycleGAN
+# This is a fork of [face-to-cartoon](https://github.com/fs2019-atml/face-to-cartoon).
+The projekt was modified with a new model for generation of goblin faces. The generated images are also converted to be drawn by a robot.
+Significant changes are either marked in the code with my name or added via new files.
 
-## Report
-The `Report_FaceToCartoon.ipynb ` covers the details of the project.
+## Added files
+[anaconda-env.yaml](anaconda-env.yaml): An anaconda environment to be used on windows \
+[linux-conda-env.yaml](linux-conda-env.yaml): An anaconda environment to be used on linux \
+[goblin](code/checkpoints/goblin): A trained model to produce goblin faces from human faces \
+[Image_preprocessing.py](code/datasets/image_preprocessing.py): A tool to preprocess data for training \
+[ImageToTxt.py](code/drawToRobot/ImageToTxt.py): Transfers an image to a txt that represent hough lines and the robotpath \
+[RobotSimulation.py](code/drawToRobot/RobotSimulation.py): Shows robot movement in 3D, calculated from a txt input \
+[robotmove_oneline.txt](code/robotmove_oneline.txt): Txt output in a more modern format (x1 y1 x2 y2; ...) \
+[robotmove_alt.txt](code/robotmove_alt.txt): Current txt output (x; y; z; x; y; ...) \
+[Image-Conversion.py](code/Image-Conversion.py): Caputres webcam and converts image to goblin and then txt file \
+## Modified files
+[cycle_gan_model.py](code/models/cycle_gan_model.py): Added support for windows paths (default is linux, windows option commented out) \
+[base_options.py](code/options/base_options.py): Changed training parameters \
 
-## Demo
-You find an interactive demo under `code/Demo.ipynb`.
+## Running the program
+run [Image-Conversion.py](/code/Image-Conversion.py)
+
 
 ## Code
 More details to the code are in `code/README.md`.
-
-## How to train
-1) Clone this repo using `git clone https://github.com/fs2019-atml/face-to-cartoon.git`
-2) Get the dataset from google drive `https://drive.google.com/open?id=12vU_Dkn13KqsVy5LOYlpoTJGWmzPqPQh`
-3) Untar the archive to `./code/datasets/` to have all the images under `./code/datasets/faces/{cartoon/*, real/*}` (e.g. `tar xf faces.tar.gz` inside `./code/datasets`)
-4) Install dependencies (See below)
-5) a) Invoke `python train.py --gpu_ids=0` to train on cuda. b) Invoke `python train.py` to wait forever.
-
-### Dependencies
-We suggest an anaconda environment with the following:
-```
-conda install numpy pyyaml mkl mkl-include setuptools cmake cffi typing
-conda install pytorch torchvision -c pytorch # add cuda90 if CUDA 9 (or magma-cuda90)
-conda install visdom dominate -c conda-forge # install visdom and dominate
-```
-
-If you run in troubles with Cuda try to downgrade pytorch to version 0.41.
-
